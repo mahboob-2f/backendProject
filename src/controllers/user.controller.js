@@ -58,10 +58,10 @@ const registerUser = asyncHandler(async (req,res)=>{
     // //   now avatar and coverImage
 
 
-    console.log("here req.body :  =>" );
-    console.log(req.body);
-    console.log("here req.files  :   => = >");
-    console.log(req.files);
+    // console.log("here req.body :  =>" );
+    // console.log(req.body);
+    // console.log("here req.files  :   => = >");
+    // console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
     const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -70,12 +70,14 @@ const registerUser = asyncHandler(async (req,res)=>{
     if(!avatarLocalPath){
         throw new ApiError(400,"Avatar is Required");
     }
+    // console.log(avatarLocalPath);
 
 
     // //  uploading on cloudinary
 
     const avatar=await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    console.log(avatar);
 
     //  here we are checking avatar is there or not
     //    because this required field so take care these type of fields which are required
@@ -91,8 +93,8 @@ const registerUser = asyncHandler(async (req,res)=>{
         username:username.toLowerCase(),
         email,
         fullname,
-        avatar:avatar.url,
-        coverImage:coverImage?.url,
+        avatar:avatar.secure_url,
+        coverImage:coverImage?.secure_url,
         password,
     })
 
