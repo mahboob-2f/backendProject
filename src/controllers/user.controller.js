@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import {User} from '../models/user.model.js';
 import {uploadOnCloudinary} from '../utils/cloudinary.js'
+import ApiResponse from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req,res)=>{
 
@@ -18,7 +19,10 @@ const registerUser = asyncHandler(async (req,res)=>{
     
     //         getting details from frontend
     const {username,email, fullname,password} = req.body;
-    console.log("fullname : ",fullname);
+    // console.log("fullname : ",fullname);
+    // console.log("email : ",email);
+    // console.log("username : ",username);
+    // console.log("password : ",password);
     
     //      validation  checks
     if(
@@ -27,9 +31,19 @@ const registerUser = asyncHandler(async (req,res)=>{
     ){
         throw new ApiError(400,"All fields are Required !!! ");
     }
-    if(!email.includes("@")){
+
+    //           validation of email in proper way
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(email)){
         throw new ApiError(400,"Email is not Valid");
     }
+
+    //    or we can use validator libarary for validation of email , 
+    //          mobileNumber,url and many more
+
+
+
 
     //      checking user already exists or not
 
@@ -40,7 +54,12 @@ const registerUser = asyncHandler(async (req,res)=>{
         throw new ApiError(409,"User with email or username already exists.");
     }
 
-    //   now avatar and coverImage
+
+    // //   now avatar and coverImage
+
+
+    console.log("here req.body :  =>" );
+    console.log(req.body);
     console.log("here req.files  :   => = >");
     console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
@@ -53,18 +72,42 @@ const registerUser = asyncHandler(async (req,res)=>{
     }
 
 
-    //  uploading on cloudinary
+    // //  uploading on cloudinary
 
     const avatar=await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     //  here we are checking avatar is there or not
-    //    because this required field so take care these type of field
+    //    because this required field so take care these type of fields which are required
 
     if(!avatar){
         throw new ApiError(400,"Avatar is Required not uploaded on cloudinary");
     }
 
+
+    //    create user object - create entry in db  
+
+    const user=await User.create({
+        username:username.toLowerCase(),
+        email,
+        fullname,
+        avatar:avatar.url,
+        coverImage:coverImage?.url,
+        password,
+    })
+
+    const createdUser = await User.findById(user._id).select("-password -refreshToken");
+
+    if(!createdUser){
+        throw new ApiError(500,"Something went wrong while registerting the user");
+    }
+
+    
+    //   returning the response that whether the user is registered or not
+
+    return res.status(201).json(
+        new ApiResponse(200,createdUser,"user registered successfully")
+    )
 
 })
 

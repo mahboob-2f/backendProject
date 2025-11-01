@@ -57,9 +57,10 @@ const userSchema = new Schema(
 userSchema.pre("save",async function (next){
     //  if user comes , and do chnage of name, avatar but except password then  this method
     //      call and changed the hash value of pass  so,
+    
 
     if(this.isModified("password")){
-        this.password = bcrypt.hash(this.password,10);
+        this.password = await bcrypt.hash(this.password,10);
         next();
     }
     else
