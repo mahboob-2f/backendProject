@@ -63,7 +63,12 @@ const registerUser = asyncHandler(async (req,res)=>{
     // console.log("here req.files  :   => = >");
     // console.log(req.files);
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0){
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
 
     //  now checking the required avatar field
 
@@ -77,7 +82,7 @@ const registerUser = asyncHandler(async (req,res)=>{
 
     const avatar=await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-    console.log(avatar);
+    // console.log(avatar);
 
     //  here we are checking avatar is there or not
     //    because this required field so take care these type of fields which are required
