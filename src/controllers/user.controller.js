@@ -118,5 +118,62 @@ const registerUser = asyncHandler(async (req,res)=>{
 
 })
 
+export const loginUser = asyncHandler(async (req,res)=>{
+
+    //      getting details(email, username, password) from user    req->body
+    //      validate the inputs are not empty
+    //      check for email and username
+    //      username or email based login 
+    //      find the user => check for user is already register or not
+    //      password check
+    //      access and refresh token generate
+    //      send tokens with cookies 
+
+
+    //        getting data from req.body
+
+    const {username, email , password} = req.body;
+
+    //      validating the inputs
+    if(
+        [username,email,password].some((field)=>field?.trim()==="")
+    ){
+        throw new ApiError(400,"username or email or password is Required.");
+    }
+
+    //      check for username and email    and username or email both based
+
+    if(!username || !email){
+        throw new ApiError(400,"username or email is Required");
+    }
+
+    //      find the user
+
+    // const existedUser = User.findOne({email})       both are correct but if we
+    // const existedUser = User.findOne({username})      have to use both through
+    //                                                      email or username
+
+    const existedUser =await User.findOne({        // this is more efficient
+        $or:[{username},{email}]
+    })
+
+    if(!existedUser){
+        throw new ApiError(404,"User not found , Please Register first");
+    }         //  404   -> not found
+    
+
+    //      password checking 
+
+    const isPasswordValid = await existedUser.isPasswordCorrect(password);
+    if(!isPasswordValid){
+        throw new ApiError(401,"Invalid user Credentials.");     // 401 -> unauthorised
+    }
+
+
+
+
+
+})
+
 
 export default registerUser;
