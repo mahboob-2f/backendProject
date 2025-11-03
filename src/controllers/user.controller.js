@@ -4,6 +4,30 @@ import {User} from '../models/user.model.js';
 import {uploadOnCloudinary} from '../utils/cloudinary.js'
 import ApiResponse from "../utils/ApiResponse.js";
 
+
+
+const generateAceessAndRefreshToken= async(userId)=>{
+    try{
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+
+        user.refreshToken=refreshToken; // here we are saving refreshToken to db
+        //   user.save() =>  will validate all the fields of user model when
+        //                   this call takes place
+        //    user.save({validateBeforeSave:false})=>   will not validate the entire mode
+        //              just save without validating the fieldds
+        await user.save({validateBeforeSave:false});
+
+        return {accessToken,refreshToken}
+
+    }catch(error){
+        throw new ApiError(500,"something went wrong with generating tokens");
+    }
+}
+
+
+
 const registerUser = asyncHandler(async (req,res)=>{
 
     //   get details from frontend
@@ -58,7 +82,7 @@ const registerUser = asyncHandler(async (req,res)=>{
     // //   now avatar and coverImage
 
 
-    // console.log("here req.body :  =>" );
+    // console.log("here req.body : =>  " );
     // console.log(req.body);
     // console.log("here req.files  :   => = >");
     // console.log(req.files);
@@ -118,6 +142,7 @@ const registerUser = asyncHandler(async (req,res)=>{
 
 })
 
+
 export const loginUser = asyncHandler(async (req,res)=>{
 
     //      getting details(email, username, password) from user    req->body
@@ -169,8 +194,74 @@ export const loginUser = asyncHandler(async (req,res)=>{
         throw new ApiError(401,"Invalid user Credentials.");     // 401 -> unauthorised
     }
 
+    //      at here , user exist and password enter is also correct so then
+    //   generating accessToken and refreshToken with method call
+
+    const {accessToken,refreshToken} = await generateAceessAndRefreshToken(existedUser._id);
+
+    const loggedInUser = await existedUser.findById(existedUser._id)
+        .select("-password -refreshToken");
 
 
+
+    //          creating cookies  
+    //          cookies =>  small piece of data send from server to web application 
+    //                  along with Session ID etc
+
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+
+    return res.status(200)
+        .cookies("accessToken",accessToken,options)
+        .cookies("refreshToken",refreshToken,options)
+        .json(
+            new ApiResponse(
+                200,
+               { 
+                    user:loggedInUser,accessToken,refreshToken
+                },
+                " User logged In successfully !!!"
+            )
+        )
+
+
+}) 
+
+export const logoutUser = asyncHandler(async (req,res)=>{
+
+    //      for logout user do the followings
+    //          firstly we have to find user then 
+    //          get accessToken and refreshToken  (  specially accessToken  )
+    //          cookies
+    //          set refreshToken to empty string in database
+    //          and delete all the cookies
+
+
+    
+    //     finding the user from cookies or request header
+
+    const user = await User.findById(req.user._id);
+
+    //      setting refreshToken to empty or undefined in db and saving this
+
+    user.refreshToken=undefined;
+    await user.save({validateBeforeSave:false});      //  saving above line change in db
+
+    //    now deleting the cookies 
+
+    const options={
+        httpOnly:true,
+        secure:true
+    }
+
+    return res.status(200)
+            .clearcookies("accessToken",options)
+            .clearcookies("refreshToken",options)
+            .json(
+                new ApiResponse(200,{},"User logged out  !!!")
+            )
 
 
 })
