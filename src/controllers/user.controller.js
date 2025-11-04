@@ -109,7 +109,7 @@ const registerUser = asyncHandler(async (req,res)=>{
     // console.log(avatar);
 
     //  here we are checking avatar is there or not
-    //    because this required field so take care these type of fields which are required
+    //    because this is required , field so take care these type of fields which are required
 
     if(!avatar){
         throw new ApiError(400,"Avatar is Required not uploaded on cloudinary");
@@ -168,7 +168,7 @@ export const loginUser = asyncHandler(async (req,res)=>{
 
     //      check for username and email    and username or email both based
 
-    if(!username || !email){
+    if(!username && !email){
         throw new ApiError(400,"username or email is Required");
     }
 
