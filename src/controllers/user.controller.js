@@ -268,7 +268,8 @@ export const logoutUser = asyncHandler(async (req,res)=>{
 })
 
 export const refreshAccessToken = asyncHandler(async (req,res)=>{
-    //  finding refresh token from cookies or req.body
+    //  finding refresh token from cookies or req.body , this refresh token is of the browser side
+
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
     if(!incomingRefreshToken){
@@ -305,7 +306,7 @@ export const refreshAccessToken = asyncHandler(async (req,res)=>{
         //  now send these tokens to client via cookie
     
         const options={
-            httpOnly:true,
+            httpOnly:true,       // this will not let javascript to modify the cookies at client side
             secure:true,
         }
     
