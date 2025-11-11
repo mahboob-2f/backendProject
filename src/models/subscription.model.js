@@ -3,7 +3,16 @@ import mongoose ,{Schema} from "mongoose";
 //      collection and documents of what type will be inserted in collection 
 
 
-const subscriptionSchema = new Schema({},{timestamps:true})
+const subscriptionSchema = new Schema({
+    subscriber:{
+        type: Schema.Types.ObjectId, //  one who is subscribing
+        ref:"User",
+    },
+    channel:{
+        type:Schema.Types.ObjectId,  //  one to whom 'subscriber' is subscribing  
+        ref:"User",
+    }
+},{timestamps:true})
 //   this line define the table structures, or how each document in collection will look
 //          and adding two fields of timestamps in documents automatically 
 //      or in simple words, this line of code will tell how each documents will look like  
