@@ -327,4 +327,82 @@ export const refreshAccessToken = asyncHandler(async (req,res)=>{
 
 })
 
+export const changeCurrentPassword= asyncHandler(async(req,res)=>{
+    const {oldPassword,newPassword}= req.body; 
+    //  this old and new password will come from form submitted at frontend
+
+    const user =await User.findById(req.user?._id);
+
+    const isPasswordCorrect =await user.isPasswordCorrect(oldPassword);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400,"Invalid password");
+    }
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave:false});
+
+
+    return res.status(200)
+        .json(
+            new ApiResponse(
+                200,
+                {},
+                "Password Changed Successfully ."
+            )
+        )
+
+})
+
+export const getCurrentUser = asyncHandler(async (req,res)=>{
+    const user = req?.user;
+
+    return res.status(200)
+        .json(
+            new ApiResponse (
+                200,
+                user,
+                "User fetched successfully"
+            )
+        )
+
+})
+
+export const updateAccountDetails= asyncHandler(async (req,res)=>{
+    const {fullname, email}= req.body;      //   this will come from fronted when user fill the form and submit it
+
+    if(!fullname || !email){
+        throw new ApiError(400,"All fields are Required");
+    }
+
+    const user = await User.findByIdAndUpdate(         //  will find user by id and update
+        req.user?._id,           //  user which to update
+
+        {                        //      these fields needed to update
+            $set:{
+                fullname,
+                email,
+            }
+        },
+
+        //      WE can use this also
+        // {
+        //     fullname,email
+        // },
+        {
+            new:true,           //   will return the updated document/row
+        }
+    ).select("-password -refreshToken");
+
+    return res.status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user,
+                "Fields updated successfully.",
+            )
+        )
+
+})
+
 export default registerUser;
