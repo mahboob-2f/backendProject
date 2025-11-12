@@ -328,6 +328,7 @@ export const refreshAccessToken = asyncHandler(async (req,res)=>{
 })
 
 export const changeCurrentPassword= asyncHandler(async(req,res)=>{
+
     const {oldPassword,newPassword}= req.body; 
     //  this old and new password will come from form submitted at frontend
 
@@ -369,6 +370,7 @@ export const getCurrentUser = asyncHandler(async (req,res)=>{
 })
 
 export const updateAccountDetails= asyncHandler(async (req,res)=>{
+
     const {fullname, email}= req.body;      //   this will come from fronted when user fill the form and submit it
 
     if(!fullname || !email){
@@ -404,5 +406,75 @@ export const updateAccountDetails= asyncHandler(async (req,res)=>{
         )
 
 })
+
+export const updateUserAvatar = asyncHandler(async (req,res)=>{
+
+    const avatarLocalPath = req.file?.path;
+    if(!avatarLocalPath){
+        throw new ApiError(400, "Avatar not found");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+
+    if(!avatar.url){
+        throw new ApiError(400,"Error while uploading avatar to cloudinary in updating controller");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+           $set:{
+            avatar:avatar.url,
+           }
+        },
+        {
+            new: true
+        }
+    ).select("-password -refreshToken");
+    if(!user){
+        throw new ApiError(400,"User not found in updating avatar controller");
+    }
+
+    return res.status(200)
+        .json(
+            new ApiResponse(200,{user},"avatar updated successfully")
+        )
+
+})
+
+export const updateUserCoverImage= asyncHandler(async(req,res)=>{
+
+    const coverImageLocalPath = req.file?.path;
+    if(!coverImageLocalPath){
+        throw new ApiError(400,"coverImage file not found");
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if(!coverImage.url){
+        throw new ApiError ( 400, "Error while uploding coverImage in updation controller");
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                coverImage:coverImage.url,
+            }
+        },
+        {
+            new:true,
+        }
+    ).select("-password -refreshToken");
+
+    if(!user){
+        throw new ApiError(400,"user not found in updating the coverImage controller");
+    }
+    return res.status(200)
+        .json(
+            new ApiResponse(200,user,"coverImage updated successfully")
+        )
+
+})
+
 
 export default registerUser;
