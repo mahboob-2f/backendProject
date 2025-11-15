@@ -476,5 +476,9 @@ export const updateUserCoverImage= asyncHandler(async(req,res)=>{
 
 })
 
+export const getUserChannelProfile= asyncHandler(async(req,res)=>{
+    
+})
+
 
 export default registerUser;
